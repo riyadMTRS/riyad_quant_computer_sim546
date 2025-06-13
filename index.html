@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riyad Quantum Computer Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 30%, #16213e 70%, #0f3460 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(0, 212, 255, 0.1), transparent, rgba(255, 0, 255, 0.1), transparent);
+            animation: rotate 20s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 3em;
+            background: linear-gradient(45deg, #00d4ff, #00ff88, #ff00ff, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #b3b3b3;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tab {
+            padding: 12px 25px;
+            margin: 0 5px;
+            border: none;
+            background: transparent;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel h3 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .circuit-builder {
+            grid-column: 1 / -1;
+        }
+
+        .qubit-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .qubit-row:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .qubit-label {
+            width: 80px;
+            font-weight: bold;
+            color: #00ff88;
+            font-size: 1.1em;
+        }
+
+        .gate-container {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            overflow-x: auto;
+            padding: 8px;
+        }
+
+        .gate-slot {
+            width: 70px;
+            height: 50px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-width: 70px;
+        }
+
+        .gate-slot:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.15);
+            transform: scale(1.05);
+        }
+
+        .gate {
+            width: 60px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .gate:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .gate-x { background: linear-gradient(45deg, #ff4757, #c44569); }
+        .gate-y { background: linear-gradient(45deg, #ffa502, #ff6348); }
+        .gate-z { background: linear-gradient(45deg, #2ed573, #20bf6b); }
+        .gate-h { background: linear-gradient(45deg, #3742fa, #2f3542); }
+        .gate-s { background: linear-gradient(45deg, #ff6b81, #ee5a6f); }
+        .gate-t { background: linear-gradient(45deg, #70a1ff, #5352ed); }
+        .gate-cnot { background: linear-gradient(45deg, #5352ed, #3742fa); }
+        .gate-rx { background: linear-gradient(45deg, #ff9ff3, #f368e0); }
+        .gate-ry { background: linear-gradient(45deg, #54a0ff, #2e86de); }
+        .gate-rz { background: linear-gradient(45deg, #5f27cd, #341f97); }
+
+        .gate-palette {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+        }
+
+        .palette-gate {
+            padding: 12px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .palette-gate:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .palette-gate.selected {
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff4757, #cc3645);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #2ed573, #25a85b);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ffa502, #ff6348);
+        }
+
+        .state-display {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .amplitude-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .amplitude-label {
+            width: 100px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .amplitude-visual {
+            flex: 1;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 0 15px;
+            position: relative;
+        }
+
+        .amplitude-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #00ff88, #ff00ff);
+            transition: width 0.5s ease;
+            border-radius: 12px;
+        }
+
+        .amplitude-value {
+            width: 120px;
+            text-align: right;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .complex-display {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .complex-number {
+            display: inline-block;
+            margin: 2px 5px;
+            padding: 4px 8px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        .measurement-result {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 136, 0.05));
+            border: 2px solid #00ff88;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            border-left: 5px solid #00d4ff;
+        }
+
+        .qubit-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .qubit-input {
+            padding: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            width: 100px;
+            font-size: 14px;
+        }
+
+        .qubit-input:focus {
+            border-color: #00d4ff;
+            outline: none;
+        }
+
+        .histogram {
+            display: flex;
+            align-items: end;
+            height: 200px;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .histogram-bar {
+            flex: 1;
+            background: linear-gradient(0deg, #00d4ff, #00ff88, #ff00ff);
+            border-radius: 5px 5px 0 0;
+            transition: height 0.7s ease;
+            position: relative;
+            min-height: 5px;
+        }
+
+        .histogram-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #ccc;
+            font-weight: bold;
+        }
+
+        .histogram-count {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .bloch-sphere {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            position: relative;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1), transparent);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 50%;
+        }
+
+        .manual-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .manual-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #00d4ff;
+        }
+
+        .manual-section h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .manual-section h4 {
+            color: #00d4ff;
+            margin: 15px 0 10px 0;
+        }
+
+        .manual-section ul, .manual-section ol {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+
+        .manual-section li {
+            margin-bottom: 8px;
+        }
+
+        .code-example {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .quantum-effect {
+            animation: quantum-pulse 3s infinite;
+        }
+
+        @keyframes quantum-pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+
+        .gate-description {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .matrix-display {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .phase-wheel {
+            width: 150px;
+            height: 150px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            position: relative;
+            margin: 15px auto;
+        }
+
+        .phase-indicator {
+            width: 4px;
+            height: 70px;
+            background: #00d4ff;
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%);
+            transition: transform 0.5s ease;
+        }
+
+        .statistics-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .stat-label {
+            color: #b3b3b3;
+            font-size: 0.9em;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .export-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .control-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 Riyad Quantum Computer Simulator</h1>
+            <p>Advanced Quantum Circuit Simulation with Complex Mathematics</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('simulator')">🔬 Simulator</button>
+            <button class="nav-tab" onclick="showTab('manual')">📚 User Manual</button>
+            <button class="nav-tab" onclick="showTab('examples')">🎯 Examples</button>
+            <button class="nav-tab" onclick="showTab('theory')">🧮 Theory</button>
+        </div>
+
+        <!-- Simulator Tab -->
+        <div id="simulator" class="tab-content active">
+            <div class="main-content">
+                <div class="panel circuit-builder">
+                    <h3>🔧 Quantum Circuit Builder</h3>
+                    
+                    <div class="qubit-controls">
+                        <label><strong>Number of Qubits:</strong></label>
+                        <input type="number" id="qubitCount" class="qubit-input" min="1" max="6" value="3">
+                        <button class="btn" onclick="updateQubitCount()">Update System</button>
+                        <div class="tooltip">
+                            <span>ℹ️</span>
+                            <span class="tooltiptext">Max 6 qubits (64 quantum states) for performance</span>
+                        </div>
+                    </div>
+
+                    <div class="gate-palette">
+                        <div class="palette-gate gate-x" onclick="selectGate('X')" title="Pauli-X (NOT) Gate">X</div>
+                        <div class="palette-gate gate-y" onclick="selectGate('Y')" title="Pauli-Y Gate">Y</div>
+                        <div class="palette-gate gate-z" onclick="selectGate('Z')" title="Pauli-Z Gate">Z</div>
+                        <div class="palette-gate gate-h" onclick="selectGate('H')" title="Hadamard Gate">H</div>
+                        <div class="palette-gate gate-s" onclick="selectGate('S')" title="S Gate (Phase)">S</div>
+                        <div class="palette-gate gate-t" onclick="selectGate('T')" title="T Gate (π/8)">T</div>
+                        <div class="palette-gate gate-cnot" onclick="selectGate('CNOT')" title="Controlled-NOT Gate">CNOT</div>
+                        <div class="palette-gate gate-rx" onclick="selectGate('RX')" title="Rotation around X-axis">RX</div>
+                        <div class="palette-gate gate-ry" onclick="selectGate('RY')" title="Rotation around Y-axis">RY</div>
+                        <div class="palette-gate gate-rz" onclick="selectGate('RZ')" title="Rotation around Z-axis">RZ</div>
+                    </div>
+
+                    <div id="gate-description" class="gate-description">
+                        Select a gate to see its description and matrix representation
+                    </div>
+
+                    <div id="circuit-grid"></div>
+
+                    <div class="control-buttons">
+                        <button class="btn btn-success" onclick="runCircuit()">▶️ Run Circuit</button>
+                        <button class="btn" onclick="stepCircuit()">👣 Step Through</button>
+                        <button class="btn btn-warning" onclick="measureAll()">📊 Measure All</button>
+                        <button class="btn" onclick="resetState()">🔄 Reset State</button>
+                        <button class="btn btn-danger" onclick="clearCircuit()">🗑️ Clear Circuit</button>
+                    </div>
+
+                    <div class="export-options">
+                        <button class="btn" onclick="exportCircuit()">💾 Export Circuit</button>
+                        <button class="btn" onclick="importCircuit()">📁 Import Circuit</button>
+                        <button class="btn" onclick="exportResults()">📋 Export Results</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>⚛️ Quantum State Vector</h3>
+                    <div id="state-display" class="state-display"></div>
+                    
+                    <div class="complex-display">
+                        <h4>Complex Amplitudes:</h4>
+                        <div id="complex-amplitudes"></div>
+                    </div>
+
+                    <div class="info-panel">
+                        <div class="statistics-panel">
+                            <div class="stat-card">
+                                <div class="stat-value" id="current-state">|000⟩</div>
+                                <div class="stat-label">Most Probable State</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="entanglement-status">No</div>
+                                <div class="stat-label">Entangled</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="superposition-status">No</div>
+                                <div class="stat-label">Superposition</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="purity-measure">1.000</div>
+                                <div class="stat-label">State Purity</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="phase-wheel">
+                        <div class="phase-indicator" id="phase-indicator"></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>📈 Measurement Results & Statistics</h3>
+                    <div id="measurement-results"></div>
+                    <div id="histogram" class="histogram"></div>
+                    
+                    <div class="statistics-panel" style="margin-top: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-measurements">0</div>
+                            <div class="stat-label">Total Measurements</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="entropy-measure">0.000</div>
+                            <div class="stat-label">Von Neumann Entropy</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>🎛️ Advanced Controls</h3>
+                    
+                    <div class="qubit-controls">
+                        <label><strong>Rotation Angle (π):</strong></label>
+                        <input type="number" id="rotationAngle" class="qubit-input" step="0.1" value="1.0">
+                        <label><strong>Noise Level:</strong></label>
+                        <input type="range" id="noiseLevel" min="0" max="0.1" step="0.01" value="0">
+                        <span id="noiseValue">0%</span>
+                    </div>
+
+                    <div class="control-buttons">
+                        <button class="btn" onclick="addNoise()">🌪️ Add Quantum Noise</button>
+                        <button class="btn" onclick="optimizeCircuit()">⚡ Optimize Circuit</button>
+                        <button class="btn" onclick="analyzeComplexity()">🧮 Analyze Complexity</button>
+                    </div>
+
+                    <div id="analysis-results" class="info-panel" style="display: none;">
+                        <h4>Circuit Analysis:</h4>
+                        <div id="complexity-analysis"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loading-spinner" id="loadingSpinner"></div>
+        </div>
+
+        <!-- User Manual Tab -->
+        <div id="manual" class="tab-content">
+            <div class="manual-content">
+                <div class="manual-section">
+                    <h3>📖 Welcome to Riyad Quantum Computer Simulator</h3>
+                    <p>This advanced quantum computer simulator provides a comprehensive platform for learning and experimenting with quantum computing concepts. Built with full complex number mathematics and real quantum mechanics principles.</p>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🚀 Getting Started</h3>
+                    <h4>1. Basic Setup</h4>
+                    <ul>
+                        <li><strong>Choose Qubits:</strong> Select the number of qubits (1-6) for your quantum system</li>
+                        <li><strong>Select Gates:</strong> Click on quantum gates in the palette to select them</li>
+                        <li><strong>Build Circuit:</strong> Click on empty slots in the circuit grid to place gates</li>
+                        <li><strong>Run Simulation:</strong> Execute your quantum circuit and observe results</li>
+                    </ul>
+
+                    <h4>2. Understanding the Interface</h4>
+                    <ul>
+                        <li><strong>Circuit Builder:</strong> Main area for constructing quantum circuits</li>
+                        <li><strong>State Vector:</strong> Shows current quantum state with complex amplitudes</li>
+                        <li><strong>Measurement Results:</strong> Displays measurement outcomes and statistics</li>
+                        <li><strong>Advanced Controls:</strong> Fine-tune simulation parameters</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🔬 Quantum Gates Guide</h3>
+                    
+                    <h4>Single-Qubit Gates</h4>
+                    <div class="code-example">
+                        <strong>Pauli Gates:</strong><br>
+                        • X Gate: Bit flip (NOT gate) - flips |0⟩ ↔ |1⟩<br>
+                        • Y Gate: Bit and phase flip - complex rotation<br>
+                        • Z Gate: Phase flip - flips phase of |1⟩ state<br><br>
+                        
+                        <strong>Rotation Gates:</strong><br>
